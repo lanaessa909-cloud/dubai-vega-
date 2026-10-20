@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dubai Real Estate Transactions – Vega-Lite</title>
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<style>
+  :root { --ink:#1f2933; --muted:#5f6c7b; --line:#dfe3e8; --card:#ffffff; --bg:#f4f6f8; --accent:#0c2c84; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height:1.5; }
+  header { background:var(--accent); color:#fff; padding:28px 20px; }
+  header h1 { margin:0 0 6px; font-size:26px; }
+  header p { margin:0; max-width:900px; opacity:.9; }
+  main { max-width:1000px; margin:0 auto; padding:20px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:8px;
+            padding:22px; margin:0 0 24px; }
+  h2 { margin:0 0 4px; font-size:20px; }
+  .sub { color:var(--muted); margin:0 0 14px; }
+  .chart { overflow-x:auto; min-height:120px; }
+  .answer { border-left:4px solid var(--accent); background:#eef2fb; padding:12px 16px;
+            margin:16px 0 0; border-radius:0 6px 6px 0; }
+  .answer b.q { display:block; margin-bottom:4px; }
+  .note { color:var(--muted); font-size:14px; margin:12px 0 0; }
+  .key { display:flex; flex-wrap:wrap; gap:16px; font-size:14px; margin:10px 0 0; color:var(--muted); }
+  .key span::before { content:""; display:inline-block; width:14px; height:14px; margin-right:6px;
+                      vertical-align:-2px; border:1px solid #fff; box-shadow:0 0 0 1px var(--line); }
+  .key .none::before { background:#e3e3e3; }
+  .key .few::before { background:#a9a9a9; }
+  .status { color:var(--muted); font-style:italic; }
+  footer { max-width:1000px; margin:0 auto; padding:0 20px 30px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dubai Real Estate Transactions – Vega-Lite (Part 2)</h1>
+  <p>Three visualizations of Dubai Land Department transactions, made with Vega-Lite. Every chart only uses transactions
+     from 1 January 2015 to 31 August 2026.</p>
+</header>
+
+<main>
+
+<section id="s1">
+  <h2>Task 1 – Transactions by day of the week</h2>
+  <p class="sub">This chart counts all transactions. The weekday is worked out in UTC from the registration date,
+     so it shows the same result on any computer.</p>
+  <div class="chart" id="vis1"><span class="status">Loading chart…</span></div>
+  <div class="answer">
+    <b class="q">Question: How many transactions were registered on Fridays?</b>
+    <b>6,553 transactions</b> were registered on Fridays. That is much lower than Tuesday to Thursday
+    (roughly 13,200 to 13,700 each) and Monday (20,126). Saturday and Sunday have none.
+  </div>
+  <p class="note">What the chart shows: nothing is registered on the weekend, and Friday is low. Almost all of the Friday
+     transactions are from 2022 onwards, because the UAE changed its weekend from Friday and Saturday to Saturday and Sunday
+     in January 2022 (299 Friday transactions before 2022 and 6,254 after). Monday is the busiest day. One possible reason
+     is that deals from the weekend get registered on the first working day, but the data cannot prove that.</p>
+</section>
+
+<section id="s2"><h2>Task 2 – Monthly Sales: Off-Plan vs. Existing Properties</h2><p class="sub">Sales transactions only | January 2015 – August 2026</p><div class="chart" id="vis2"><span class="status">Loading chart…</span></div><div class="answer"><b class="q">Question: In which month were off-plan sales highest, and how many?</b>September 2025 had the highest number of off-plan sales in the supplied dataset, with <b>706 sales</b>.</div><p class="note">What the chart shows: from 2015 to 2020 off-plan and existing sales moved at similar, fairly flat levels, with a sharp dip in April–May 2020 during COVID-19 (existing sales fell to 19 in April 2020). From 2021 both grew strongly; existing sales led in 2021–2022, but from 2023 off-plan sales pulled ahead and roughly doubled existing sales by 2025, reflecting the developer-led boom of projects sold before completion. Both lines are lower in 2026 than at the 2025 peak. Hover over a line for the exact monthly count.</p></section>
+
+<section id="s3">
+  <h2>Task 3 – Median price per m² of units and villas by community</h2>
+  <p class="sub">Sales of units and villas only, 1 Jan 2015 – 31 Aug 2026. Each Dubai Municipality community is coloured by the
+     median price per square metre of its sales. Hover over a community to see its name, number of sales and median price.</p>
+  <div class="chart" id="vis3"><span class="status">Loading map…</span></div>
+  <div class="key"><span class="none">No unit/villa sales</span><span class="few">Fewer than 10 sales (median not reliable)</span></div>
+  <p class="note"><b>Colour choices.</b> Prices are strongly right-skewed: most communities sit between about 8,000 and 20,000 AED/m²,
+     while a few luxury communities are far above. A linear scale would make almost every community the same light colour, so the map
+     uses a <b>quantile</b> scale (5 classes, each holding about the same number of communities) with a sequential orange–red palette.
+     A median of only a handful of sales can be extreme by chance, so communities with <b>fewer than 10 sales</b> are shown in grey instead of
+     a price colour. Communities with no unit/villa sales stay visible in light grey, so all communities appear on the map.
+     The Mercator projection is used because it keeps shapes correct at city scale.</p>
+  <div class="answer">
+    <b class="q">Question: Which community has the largest number of sales of units and villas, and how many sales is it? Is this visualization effective in finding it? Why?</b>
+    <b id="a3">Checking the source data…</b> <button id="retry3" type="button" onclick="answerTask3()" style="display:none;margin-left:8px;padding:5px 10px;cursor:pointer">Retry</button><br>
+    <b>No, the map is not effective for this question.</b> Colour encodes the <i>median price</i>; the number of sales is not encoded at all
+    and is only available in the tooltip, so a reader has to hover over every community one by one to find the busiest one.
+    The size of each shape also shows the community's land area, not how many sales it has, so large desert communities catch the eye
+    even when they have few sales. A sorted bar chart of sales per community, or a symbol map with circle size = number of sales,
+    would answer this question at a glance. The map is effective for its own purpose: showing <i>where</i> prices are high
+    (the coast, Palm Jumeirah, Downtown and Business Bay) and where they are low (inland and outer communities).
+  </div>
+</section>
+
+
+
+
+</main>
+
+<script>
+const specs = {
+  vis1: {"$schema": "https://vega.github.io/schema/vega-lite/v5.json", "width": 640, "height": 360, "layer": [{"mark": {"type": "bar", "cornerRadiusTopLeft": 3, "cornerRadiusTopRight": 3}, "encoding": {"x": {"field": "weekday", "type": "nominal", "sort": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "scale": {"domain": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}, "axis": {"title": "Day of the week", "labelAngle": 0}}, "y": {"aggregate": "count", "type": "quantitative", "axis": {"title": "Number of transactions"}}, "color": {"field": "weekday", "type": "nominal", "scale": {"domain": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "range": ["#4e79a7", "#f28e2b", "#59a14f", "#b07aa1", "#e15759", "#76b7b2", "#9c755f"]}, "legend": {"title": "Day"}}, "tooltip": [{"field": "weekday", "type": "nominal", "title": "Day"}, {"aggregate": "count", "type": "quantitative", "title": "Transactions", "format": ","}]}, "transform": [{"filter": "time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) <= time(utc(2026,7,31))"}, {"calculate": "utcFormat(datum.instance_date, '%A')", "as": "weekday"}], "data": {"url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv", "format": {"type": "csv", "parse": {"instance_date": "utc:'%Y-%m-%d'", "meter_sale_price": "number", "comm_num": "string"}}}}, {"mark": {"type": "text", "dy": -8, "fontSize": 12, "fontWeight": "bold"}, "encoding": {"x": {"field": "weekday", "type": "nominal", "sort": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "scale": {"domain": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}}, "y": {"aggregate": "count", "type": "quantitative"}, "text": {"aggregate": "count", "type": "quantitative", "format": ","}}, "transform": [{"filter": "time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) <= time(utc(2026,7,31))"}, {"calculate": "utcFormat(datum.instance_date, '%A')", "as": "weekday"}], "data": {"url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv", "format": {"type": "csv", "parse": {"instance_date": "utc:'%Y-%m-%d'", "meter_sale_price": "number", "comm_num": "string"}}}}, {"data": {"values": [{"weekday": "Saturday"}, {"weekday": "Sunday"}]}, "mark": {"type": "text", "dy": -8, "fontSize": 12, "fontWeight": "bold", "color": "#555"}, "encoding": {"x": {"field": "weekday", "type": "nominal", "sort": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], "scale": {"domain": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]}}, "y": {"datum": 0, "type": "quantitative"}, "text": {"value": "0"}}}], "config": {"view": {"stroke": null}}},
+
+  vis2: {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "width": 760, "height": 410,
+    "data": {"url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv", "format": {"type": "csv", "parse": {"instance_date": "utc:'%Y-%m-%d'", "meter_sale_price": "number", "comm_num": "string"}}},
+    "transform": [
+      {"filter": "time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) <= time(utc(2026,7,31))"},
+      {"filter": "datum.trans_group_en === 'Sales'"},
+      {"timeUnit": "utcyearmonth", "field": "instance_date", "as": "month"},
+      {"aggregate": [{"op": "count", "as": "sales"}], "groupby": ["month", "reg_type_en"]}
+    ],
+    "encoding": {
+      "x": {"field": "month", "type": "temporal", "title": "Month (2015\u20132026)",
+            "scale": {"type": "utc", "domain": [{"year": 2015, "month": 1, "date": 1, "utc": true}, {"year": 2026, "month": 8, "date": 1, "utc": true}]},
+            "axis": {"format": "%b %Y", "formatType": "utc", "labelAngle": -45, "tickCount": {"interval": "month", "step": 6}}},
+      "y": {"field": "sales", "type": "quantitative", "title": "Number of sales", "scale": {"zero": true}},
+      "color": {"field": "reg_type_en", "type": "nominal", "title": "Property registration type",
+                "scale": {"domain": ["Off-Plan Properties", "Existing Properties"], "range": ["#2563eb", "#e88738"]}}
+    },
+    "layer": [
+      {"mark": {"type": "line", "point": {"filled": true, "size": 15}, "strokeWidth": 2.4},
+       "encoding": {"tooltip": [
+         {"field": "month", "type": "temporal", "title": "Month", "format": "%B %Y", "formatType": "utc"},
+         {"field": "reg_type_en", "type": "nominal", "title": "Type"},
+         {"field": "sales", "type": "quantitative", "title": "Sales", "format": ","}
+       ]}},
+      {"transform": [
+         {"filter": "datum.reg_type_en === 'Off-Plan Properties'"},
+         {"window": [{"op": "row_number", "as": "rank"}], "sort": [{"field": "sales", "order": "descending"}]},
+         {"filter": "datum.rank === 1"},
+         {"calculate": "utc(utcyear(datum.month) - 3, utcmonth(datum.month), 1)", "as": "note_x"},
+         {"calculate": "datum.sales + 55", "as": "note_y"}
+       ],
+       "layer": [
+         {"mark": {"type": "rule", "color": "#111", "strokeWidth": 1.2, "strokeDash": [4, 3]},
+          "encoding": {"x": {"field": "note_x", "type": "temporal"}, "y": {"field": "note_y", "type": "quantitative"},
+                       "x2": {"field": "month"}, "y2": {"field": "sales"}, "color": {"value": "#111"}}},
+         {"mark": {"type": "point", "filled": true, "size": 110, "color": "#111", "stroke": "#fff", "strokeWidth": 1.5},
+          "encoding": {"color": {"value": "#111"}}},
+         {"mark": {"type": "text", "align": "right", "baseline": "middle", "dx": -6, "fontSize": 12, "lineHeight": 15, "color": "#111"},
+          "encoding": {"x": {"field": "note_x", "type": "temporal"}, "y": {"field": "note_y", "type": "quantitative"},
+                       "color": {"value": "#111"}, "text": {"value": ["NOTE – Off-plan peak:", "September 2025, 706 sales"]}}}
+       ]}
+    ],
+    "config": {"view": {"stroke": null}, "axis": {"labelFontSize": 11, "titleFontSize": 13}, "legend": {"labelFontSize": 12}}
+  },
+  vis3: {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "width": 860, "height": 700,
+    "projection": {"type": "mercator", "center": [55.27, 25.07], "scale": 48000, "translate": [430, 350]},
+    "layer": [
+      {
+        "data": {"url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/dubai.geojson", "format": {"type": "json", "property": "features"}},
+        "mark": {"type": "geoshape", "fill": "#e3e3e3", "stroke": "#ffffff", "strokeWidth": 0.7, "clip": true, "cursor": "pointer"},
+        "params": [{"name": "hoverBase", "select": {"type": "point", "on": "pointerover", "clear": "pointerout"}}],
+        "encoding": {
+          "stroke": {"condition": {"param": "hoverBase", "empty": false, "value": "#000000"}, "value": "#ffffff"},
+          "strokeWidth": {"condition": {"param": "hoverBase", "empty": false, "value": 2}, "value": 0.7},
+          "tooltip": [
+          {"field": "properties.CNAME_E", "type": "nominal", "title": "Community"},
+          {"value": "No unit/villa sales", "title": "Sales"}
+        ]}
+      },
+      {
+        "data": {"url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv", "format": {"type": "csv", "parse": {"instance_date": "utc:'%Y-%m-%d'", "meter_sale_price": "number", "comm_num": "string"}}},
+        "transform": [
+          {"filter": "time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) <= time(utc(2026,7,31))"},
+          {"filter": "datum.trans_group_en === 'Sales' && (datum.property_type_en === 'Unit' || datum.property_type_en === 'Villa')"},
+          {"filter": "isValid(datum.comm_num) && datum.comm_num !== ''"},
+          {"aggregate": [{"op": "count", "as": "sales"}, {"op": "median", "field": "meter_sale_price", "as": "median_price"}], "groupby": ["comm_num"]},
+          {"lookup": "comm_num", "from": {"data": {"url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/dubai.geojson", "format": {"type": "json", "property": "features"}}, "key": "properties.COMM_NUM"}, "as": "geo"},
+          {"filter": "isValid(datum.geo)"},
+          {"calculate": "datum.geo.properties.CNAME_E", "as": "community"},
+          {"calculate": "datum.sales >= 10 ? datum.median_price : null", "as": "reliable_price"}
+        ],
+        "mark": {"type": "geoshape", "stroke": "#ffffff", "strokeWidth": 0.7, "clip": true, "cursor": "pointer"},
+        "params": [{"name": "hoverComm", "select": {"type": "point", "on": "pointerover", "clear": "pointerout"}}],
+        "encoding": {
+          "stroke": {"condition": {"param": "hoverComm", "empty": false, "value": "#000000"}, "value": "#ffffff"},
+          "strokeWidth": {"condition": {"param": "hoverComm", "empty": false, "value": 2.5}, "value": 0.7},
+          "shape": {"field": "geo", "type": "geojson"},
+          "color": {
+            "condition": {"test": "datum.sales >= 10", "field": "reliable_price", "type": "quantitative",
+              "title": "Median price (AED/m²)",
+              "scale": {"type": "quantile", "scheme": "orangered", "count": 7},
+              "legend": {"format": ",.0f", "orient": "top-left", "fillColor": "rgba(255,255,255,0.9)", "padding": 8}},
+            "value": "#a9a9a9"
+          },
+          "tooltip": [
+            {"field": "community", "type": "nominal", "title": "Community"},
+            {"field": "sales", "type": "quantitative", "title": "Number of sales", "format": ","},
+            {"field": "median_price", "type": "quantitative", "title": "Median price (AED/m²)", "format": ",.0f"}
+          ]
+        }
+      }
+    ],
+    "config": {"view": {"stroke": null}}
+  }
+};
+
+// Task 3 answer: computed from the same data, so the number is always correct
+async function answerTask3() {
+  const el = document.getElementById("a3");
+  const retry = document.getElementById("retry3");
+  el.textContent = "Checking the source data…";
+  retry.style.display = "none";
+  try {
+    const CSV = "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv";
+    const GEO = "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/dubai.geojson";
+    const loader = vega.loader();
+    const [csvText, geoText] = await Promise.all([loader.load(CSV), loader.load(GEO)]);
+    const rows = vega.read(csvText, {type: "csv"});
+    const names = {};
+    JSON.parse(geoText).features.forEach(f => { names[String(f.properties.COMM_NUM).trim()] = f.properties.CNAME_E; });
+    const counts = {};
+    const start = Date.UTC(2015, 0, 1), endExclusive = Date.UTC(2026, 8, 1);
+    for (const d of rows) {
+      const t = Date.parse(String(d.instance_date || '').slice(0, 10) + 'T00:00:00Z');
+      const code = String(d.comm_num || '').trim();
+      if (Number.isFinite(t) && t >= start && t < endExclusive &&
+          String(d.trans_group_en || '').trim() === "Sales" &&
+          ["Unit", "Villa"].includes(String(d.property_type_en || '').trim()) &&
+          code && names[code]) {
+        counts[code] = (counts[code] || 0) + 1;
+      }
+    }
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+    if (!top) throw new Error("No matching sales found in source data");
+    el.textContent = names[top[0]] + " (community " + top[0] + ") has the most sales of units and villas: " +
+                     Number(top[1]).toLocaleString("en-US") + " sales.";
+  } catch (e) {
+    el.textContent = "The highest-sales community could not be verified because the external source data was unavailable. Check the data connection before submission.";
+    retry.style.display = "inline-block";
+    console.error("Task 3 source data error:", e);
+  }
+}
+
+// Vega-Lite leaves quantile legends as a gradient; force a discrete class legend instead.
+function symbolLegend(vgSpec) {
+  (vgSpec.legends || []).forEach(l => { l.type = "symbol"; });
+  return vgSpec;
+}
+
+const opts = { actions: { export: true, source: true, compiled: true, editor: true }, renderer: "svg" };
+
+async function show(id, spec, extra) {
+  const el = document.getElementById(id);
+  try {
+    await vegaEmbed("#" + id, spec, Object.assign({}, opts, extra || {}));
+    const st = el.querySelector(".status");
+    if (st) st.remove();
+  } catch (e) {
+    el.innerHTML = '<span class="status">This chart could not be loaded: ' + String(e.message || e) + '</span>';
+    console.error(id, e);
+  }
+}
+
+// one after the other, so the large CSV is fetched once and then served from the browser cache
+(async () => {
+    // One after the other: the CSV is downloaded once, then served from the browser cache.
+  await show("vis1", specs.vis1);
+  await show("vis2", specs.vis2);
+  await show("vis3", specs.vis3, { patch: symbolLegend });
+  answerTask3();
+})();
+</script>
+</body>
+</html>
