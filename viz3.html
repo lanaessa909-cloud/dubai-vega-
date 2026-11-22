@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Viz 3 | Dubai market structure</title>
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<style>
+:root{--navy:#0c2c84;--ink:#1f2933;--muted:#5f6c7b;--border:#dfe3e8;--bg:#f4f6f8}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.55}
+header{background:var(--navy);color:#fff;padding:29px 22px} header h1{margin:0 0 6px;font-size:27px} header p{margin:0;opacity:.93;max-width:950px}
+main{max-width:1040px;margin:auto;padding:22px}
+section{background:#fff;border:1px solid var(--border);border-radius:9px;padding:24px;margin-bottom:22px}
+h2{font-size:21px;margin:0 0 10px} h3{font-size:16px;margin:18px 0 6px} p{margin:6px 0 12px} ul{margin:4px 0 12px;padding-left:22px}
+.note{font-size:14px;color:var(--muted)} #vis{overflow-x:auto;min-height:400px} #showing{font-weight:bold;color:var(--navy);font-size:15px}
+.status{color:var(--muted);font-style:italic} code{background:#eef2fb;border-radius:3px;padding:2px 5px}
+.vega-bindings{margin:8px 0 17px}.vega-bind{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:bold}.vega-bind select{padding:8px 11px;border:1px solid #bfc9d4;border-radius:6px;background:#fff;font:inherit}
+@media(max-width:600px){header h1{font-size:22px}main{padding:10px}section{padding:14px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Visualization 3 – What does Dubai's real-estate market look like?</h1>
+<p>Transaction types, property types and room categories | 1 January 2015 – 31 August 2026 | Dubai Land Department (random 10% sample)</p>
+</header>
+<main>
+<section>
+<h2>Market structure: heatmap + linked breakdown + yearly trend</h2>
+<p class="note"><b>Use the room dropdown</b> to filter all three views. <b>Click a heatmap cell</b> to compare existing and off-plan transactions for that combination in the bar chart and see the annual trend below. <b>Double-click</b> the heatmap to reset. Hover for exact counts.</p>
+<p id="showing">Linked charts show: all transaction and property types</p>
+<div id="vis"><p class="status">Loading data and chart. The source CSV is about 18 MB, so loading may take a moment…</p></div>
+<p class="note">The room menu uses values from the original <code>rooms_en</code> column, including “Office” and “Shop”. “No room data” means the room field is blank (100% of land and building transactions; about 39% of villa transactions). Counts show transactions in a random 10% sample, not distinct homes. <b>2026 is incomplete (January–August only)</b>, so compare its counts cautiously.</p>
+</section>
+<section>
+<h2>1. URL</h2>
+<p><a href="https://lanaessa909-cloud.github.io/dubai-vega-/viz3.html">https://lanaessa909-cloud.github.io/dubai-vega-/viz3.html</a></p>
+<h2>2. Encoding</h2>
+<ul>
+<li><b>View 1 – heatmap:</b> x-axis = transaction group (Sales, Mortgages, Gifts); y-axis = property type (Unit, Villa, Land, Building). Each rectangle represents one combination. The colour intensity and the number printed inside each rectangle encode the count of transactions. A square-root colour scale keeps smaller groups readable. The selected cell has an orange outline.</li>
+<li><b>View 2 – linked bar chart:</b> x-axis = registration type (Existing Properties vs Off-Plan Properties); y-axis = number of transactions. The bars are coloured by registration status (blue = existing, orange = off-plan), and labels show both the count and the percentage of the current selection. All three views use the same room-category filter.</li>
+<li><b>View 3 – yearly trend:</b> x-axis = year (2015–2026); y-axis = number of transactions; line colour = existing (blue) versus off-plan (orange). The linked line chart shows how the selected transaction/property combination changed over time. Hover reveals yearly counts and the share within each year.</li>
+</ul>
+<h2>3. Interaction</h2>
+<ul>
+<li><b>Dropdown:</b> select a room category, or “No room data”, to filter all three views.</li>
+<li><b>Hover:</b> see counts in the heatmap, count and percentage in the bars, and annual counts and shares in the trend.</li>
+<li><b>Click:</b> select a heatmap cell (e.g., Sales + Unit) to update both the bar chart and the yearly line chart to that combination.</li>
+<li><b>Double-click:</b> reset the heatmap selection so the two lower charts show all transaction/property groups (still respecting the room filter).</li>
+</ul>
+<h2>4. Value added</h2>
+<p>In the team's cleaned date window (67,022 sampled transactions), the chart reveals concrete differences in market structure:</p>
+<ul>
+<li><b>Units dominate sales:</b> Sales + Unit accounts for <b>39,809 transactions (59.4% of all 67,022)</b>.</li>
+<li><b>Off-plan is stronger for units:</b> <b>62.2%</b> of unit sales are off-plan, compared with <b>47.2%</b> of villa sales.</li>
+<li><b>Mortgages mostly involve existing properties:</b> <b>98.6%</b> of mortgage transactions are existing-property registrations. The data does not tell us how every off-plan purchase was financed.</li>
+<li><b>Villas have more mortgage registrations proportionally:</b> mortgages account for <b>34.4%</b> of all villa transactions versus <b>14.1%</b> of all unit transactions.</li>
+<li><b>Gifted units are mostly existing:</b> <b>91.9%</b> of <i>unit gift transactions</i> refer to existing properties (not 92% of all gifts).</li>
+<li><b>Time adds a new insight:</b> in <b>unit sales</b>, off-plan transactions overtook existing sales again in <b>2022</b> and the gap expanded through <b>2025</b> (6,230 off-plan vs 2,496 existing in 2025). Select <b>Sales + Unit</b> to see this pattern. This view reveals <i>when</i> market structure changed, not only which category is largest.</li>
+</ul>
+<p><b>Why it helps:</b> buyers and investors can compare market segments and registration status, while planners can see which transaction types are growing. The linked filters prevent mixing unlike property and room categories.</p>
+</section>
+<section>
+<h2>Data quality and limitations</h2>
+<ul>
+<li>Applies the team's shared date window: 1 January 2015–31 August 2026, with invalid dates excluded.</li>
+<li>Uses all transaction groups and property types for <b>count</b> analysis. The sales-price trimming rule is deliberately <b>not</b> applied, because no prices are encoded in these charts.</li>
+<li>Missing room values remain in the “All” view; choosing “No room data” shows only those missing entries. This is common by design for land and buildings, so missing rooms does not mean the entire row is unusable.</li>
+<li>The data is a random 10% sample, so counts show sampled transactions rather than total Dubai volumes. Counts refer to transactions, not unique properties. The 2026 yearly total is incomplete (January–August).</li>
+</ul>
+</section>
+</main>
+<script>
+const spec={
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "CS333 Part 3: market-structure heatmap linked to registration-status breakdown and annual trend, 2015–Aug 2026.",
+  "params": [
+    {
+      "name": "roomChoice",
+      "value": "All",
+      "bind": {
+        "input": "select",
+        "name": "Rooms or property use: ",
+        "options": [
+          "All",
+          "Studio",
+          "1 B/R",
+          "2 B/R",
+          "3 B/R",
+          "4 B/R",
+          "5 B/R",
+          "6 B/R",
+          "7 B/R",
+          "PENTHOUSE",
+          "Office",
+          "Shop",
+          "Single Room",
+          "GYM",
+          "Not specified"
+        ],
+        "labels": [
+          "All rooms / types",
+          "Studio",
+          "1 bedroom",
+          "2 bedrooms",
+          "3 bedrooms",
+          "4 bedrooms",
+          "5 bedrooms",
+          "6 bedrooms",
+          "7 bedrooms",
+          "Penthouse",
+          "Office",
+          "Shop",
+          "Single room",
+          "Gym",
+          "No room data (mostly land, buildings & villas)"
+        ]
+      }
+    }
+  ],
+  "vconcat": [
+    {
+      "title": {
+        "text": "Which transaction and property combinations dominate Dubai?",
+        "subtitle": "Choose a room category, then click a cell to update BOTH charts below",
+        "anchor": "start",
+        "fontSize": 18,
+        "subtitleFontSize": 12
+      },
+      "width": 670,
+      "height": 335,
+      "data": {
+        "url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv",
+        "format": {
+          "type": "csv",
+          "parse": {
+            "instance_date": "utc:'%Y-%m-%d'",
+            "meter_sale_price": "number",
+            "procedure_area": "number",
+            "actual_worth": "number",
+            "comm_num": "string"
+          }
+        }
+      },
+      "transform": [
+        {
+          "filter": "isValid(datum.instance_date) && time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) < time(utc(2026,8,1))"
+        },
+        {
+          "filter": "roomChoice === 'All' || (roomChoice === 'Not specified' ? (!isValid(datum.rooms_en) || datum.rooms_en === '') : datum.rooms_en === roomChoice)"
+        },
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "as": "transactions"
+            }
+          ],
+          "groupby": [
+            "trans_group_en",
+            "property_type_en"
+          ]
+        }
+      ],
+      "layer": [
+        {
+          "params": [
+            {
+              "name": "cellPick",
+              "select": {
+                "type": "point",
+                "fields": [
+                  "trans_group_en",
+                  "property_type_en"
+                ],
+                "on": "click",
+                "clear": "dblclick"
+              }
+            }
+          ],
+          "mark": {
+            "type": "rect",
+            "cursor": "pointer",
+            "strokeWidth": 2
+          },
+          "encoding": {
+            "x": {
+              "field": "trans_group_en",
+              "type": "nominal",
+              "title": "Transaction type",
+              "sort": [
+                "Sales",
+                "Mortgages",
+                "Gifts"
+              ],
+              "axis": {
+                "labelAngle": 0,
+                "labelFontSize": 13
+              }
+            },
+            "y": {
+              "field": "property_type_en",
+              "type": "nominal",
+              "title": "Property type",
+              "sort": [
+                "Unit",
+                "Villa",
+                "Land",
+                "Building"
+              ],
+              "axis": {
+                "labelFontSize": 13
+              }
+            },
+            "color": {
+              "field": "transactions",
+              "type": "quantitative",
+              "title": "Number of transactions",
+              "scale": {
+                "type": "sqrt",
+                "scheme": "blues",
+                "domainMin": 0
+              },
+              "legend": {
+                "format": ",.0f"
+              }
+            },
+            "stroke": {
+              "condition": {
+                "param": "cellPick",
+                "empty": false,
+                "value": "#f97316"
+              },
+              "value": "white"
+            },
+            "tooltip": [
+              {
+                "field": "trans_group_en",
+                "type": "nominal",
+                "title": "Transaction type"
+              },
+              {
+                "field": "property_type_en",
+                "type": "nominal",
+                "title": "Property type"
+              },
+              {
+                "field": "transactions",
+                "type": "quantitative",
+                "title": "Transactions (10% sample)",
+                "format": ","
+              }
+            ]
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "fontWeight": "bold",
+            "fontSize": 14
+          },
+          "encoding": {
+            "x": {
+              "field": "trans_group_en",
+              "type": "nominal",
+              "sort": [
+                "Sales",
+                "Mortgages",
+                "Gifts"
+              ]
+            },
+            "y": {
+              "field": "property_type_en",
+              "type": "nominal",
+              "sort": [
+                "Unit",
+                "Villa",
+                "Land",
+                "Building"
+              ]
+            },
+            "text": {
+              "field": "transactions",
+              "type": "quantitative",
+              "format": ","
+            },
+            "color": {
+              "condition": {
+                "test": "datum.transactions >= 10000",
+                "value": "white"
+              },
+              "value": "#17324d"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": {
+        "text": "Selected combination: existing vs off-plan properties",
+        "subtitle": "Number and percentage within the selected combination; click a heatmap cell to filter",
+        "anchor": "start",
+        "fontSize": 18,
+        "subtitleFontSize": 12
+      },
+      "width": 670,
+      "height": 245,
+      "data": {
+        "url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv",
+        "format": {
+          "type": "csv",
+          "parse": {
+            "instance_date": "utc:'%Y-%m-%d'",
+            "meter_sale_price": "number",
+            "procedure_area": "number",
+            "actual_worth": "number",
+            "comm_num": "string"
+          }
+        }
+      },
+      "transform": [
+        {
+          "filter": "isValid(datum.instance_date) && time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) < time(utc(2026,8,1))"
+        },
+        {
+          "filter": "roomChoice === 'All' || (roomChoice === 'Not specified' ? (!isValid(datum.rooms_en) || datum.rooms_en === '') : datum.rooms_en === roomChoice)"
+        },
+        {
+          "filter": {
+            "param": "cellPick"
+          }
+        },
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "as": "transactions"
+            }
+          ],
+          "groupby": [
+            "reg_type_en"
+          ]
+        },
+        {
+          "joinaggregate": [
+            {
+              "op": "sum",
+              "field": "transactions",
+              "as": "comparison_total"
+            }
+          ]
+        },
+        {
+          "calculate": "datum.comparison_total > 0 ? 100 * datum.transactions / datum.comparison_total : null",
+          "as": "share_pct"
+        },
+        {
+          "calculate": "format(datum.transactions, ',') + '  (' + format(datum.share_pct, '.0f') + '%)'",
+          "as": "bar_label"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "cornerRadiusEnd": 3
+          },
+          "encoding": {
+            "x": {
+              "field": "reg_type_en",
+              "type": "nominal",
+              "title": "Property registration status",
+              "sort": [
+                "Existing Properties",
+                "Off-Plan Properties"
+              ],
+              "scale": {
+                "domain": [
+                  "Existing Properties",
+                  "Off-Plan Properties"
+                ]
+              },
+              "axis": {
+                "labelAngle": 0,
+                "labelFontSize": 13
+              }
+            },
+            "y": {
+              "field": "transactions",
+              "type": "quantitative",
+              "title": "Number of transactions (10% sample)",
+              "axis": {
+                "format": ",.0f"
+              }
+            },
+            "color": {
+              "field": "reg_type_en",
+              "type": "nominal",
+              "legend": null,
+              "scale": {
+                "domain": [
+                  "Existing Properties",
+                  "Off-Plan Properties"
+                ],
+                "range": [
+                  "#1c548a",
+                  "#eb7a44"
+                ]
+              }
+            },
+            "tooltip": [
+              {
+                "field": "reg_type_en",
+                "type": "nominal",
+                "title": "Registration status"
+              },
+              {
+                "field": "transactions",
+                "type": "quantitative",
+                "title": "Transactions",
+                "format": ","
+              },
+              {
+                "field": "share_pct",
+                "type": "quantitative",
+                "title": "Share of selection (%)",
+                "format": ".1f"
+              }
+            ]
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "dy": -9,
+            "fontSize": 13,
+            "fontWeight": "bold",
+            "color": "#233749"
+          },
+          "encoding": {
+            "x": {
+              "field": "reg_type_en",
+              "type": "nominal",
+              "sort": [
+                "Existing Properties",
+                "Off-Plan Properties"
+              ]
+            },
+            "y": {
+              "field": "transactions",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": "bar_label",
+              "type": "nominal"
+            }
+          }
+        }
+      ],
+      "encoding": {}
+    },
+    {
+      "title": {
+        "text": "How did this market segment change over time?",
+        "subtitle": "Annual transaction counts by registration status | 2026 only January–August",
+        "anchor": "start",
+        "fontSize": 18,
+        "subtitleFontSize": 12
+      },
+      "width": 670,
+      "height": 285,
+      "data": {
+        "url": "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv",
+        "format": {
+          "type": "csv",
+          "parse": {
+            "instance_date": "utc:'%Y-%m-%d'",
+            "meter_sale_price": "number",
+            "procedure_area": "number",
+            "actual_worth": "number",
+            "comm_num": "string"
+          }
+        }
+      },
+      "transform": [
+        {
+          "filter": "isValid(datum.instance_date) && time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) < time(utc(2026,8,1))"
+        },
+        {
+          "filter": "roomChoice === 'All' || (roomChoice === 'Not specified' ? (!isValid(datum.rooms_en) || datum.rooms_en === '') : datum.rooms_en === roomChoice)"
+        },
+        {
+          "filter": {
+            "param": "cellPick"
+          }
+        },
+        {
+          "timeUnit": "utcyear",
+          "field": "instance_date",
+          "as": "year"
+        },
+        {
+          "aggregate": [
+            {
+              "op": "count",
+              "as": "transactions"
+            }
+          ],
+          "groupby": [
+            "year",
+            "reg_type_en"
+          ]
+        },
+        {
+          "joinaggregate": [
+            {
+              "op": "sum",
+              "field": "transactions",
+              "as": "year_total"
+            }
+          ],
+          "groupby": [
+            "year"
+          ]
+        },
+        {
+          "calculate": "datum.year_total > 0 ? 100 * datum.transactions / datum.year_total : null",
+          "as": "year_share_pct"
+        }
+      ],
+      "layer": [
+        {
+          "mark": {
+            "type": "line",
+            "strokeWidth": 3,
+            "point": {
+              "filled": true,
+              "size": 70
+            }
+          },
+          "encoding": {
+            "x": {
+              "field": "year",
+              "type": "temporal",
+              "title": "Year",
+              "scale": {
+                "type": "utc"
+              },
+              "axis": {
+                "format": "%Y",
+                "formatType": "utc",
+                "tickCount": {
+                  "interval": "year",
+                  "step": 1
+                },
+                "labelAngle": 0
+              }
+            },
+            "y": {
+              "field": "transactions",
+              "type": "quantitative",
+              "title": "Transactions (10% sample)",
+              "axis": {
+                "format": ","
+              }
+            },
+            "color": {
+              "field": "reg_type_en",
+              "type": "nominal",
+              "title": "Registration status",
+              "scale": {
+                "domain": [
+                  "Existing Properties",
+                  "Off-Plan Properties"
+                ],
+                "range": [
+                  "#1c548a",
+                  "#eb7a44"
+                ]
+              }
+            },
+            "tooltip": [
+              {
+                "field": "year",
+                "type": "temporal",
+                "timeUnit": "utcyear",
+                "title": "Year"
+              },
+              {
+                "field": "reg_type_en",
+                "type": "nominal",
+                "title": "Registration status"
+              },
+              {
+                "field": "transactions",
+                "type": "quantitative",
+                "title": "Transactions",
+                "format": ","
+              },
+              {
+                "field": "year_share_pct",
+                "type": "quantitative",
+                "title": "Share within year (%)",
+                "format": ".1f"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "resolve": {
+    "scale": {
+      "color": "independent"
+    }
+  },
+  "config": {
+    "background": "white",
+    "font": "Segoe UI",
+    "view": {
+      "stroke": null
+    },
+    "axis": {
+      "gridColor": "#e7ebf0"
+    },
+    "concat": {
+      "spacing": 50
+    }
+  }
+};
+const target=document.getElementById('vis');
+function valuesOfSelection(v){
+  if(!v || typeof v!=='object')return [];
+  let items=[];
+  (function walk(x){if(!x||typeof x!=='object')return;
+    if(Array.isArray(x)){x.forEach(walk);return;}
+    if(Object.prototype.hasOwnProperty.call(x,'trans_group_en') && Object.prototype.hasOwnProperty.call(x,'property_type_en')){
+      items.push(String(x.trans_group_en)+' + '+String(x.property_type_en));
+    }
+    for(const k in x)if(x[k] && typeof x[k]==='object')walk(x[k]);
+  })(v);
+  return [...new Set(items)];
+}
+vegaEmbed('#vis',spec,{actions:{export:true,source:true,compiled:true,editor:true},renderer:'svg'})
+  .then(result=>{
+    result.view.addSignalListener('cellPick',(_name,value)=>{
+      const selections=valuesOfSelection(value);
+      document.getElementById('showing').textContent=selections.length
+        ? 'Linked charts show: '+selections.join(', ')
+        : 'Linked charts show: all transaction and property types';
+    });
+  })
+  .catch(err=>{console.error(err);target.innerHTML='<p class="status">Chart could not be loaded: '+String(err.message||err).replace(/[<>]/g,'')+'</p>';});
+</script>
+</body>
+</html>
