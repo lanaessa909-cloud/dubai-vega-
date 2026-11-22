@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viz 1 – Where did Dubai prices grow?</title>
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<style>
+  :root { --ink:#1f2933; --muted:#5f6c7b; --line:#dfe3e8; --card:#ffffff; --bg:#f4f6f8; --accent:#0c2c84; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height:1.5; }
+  header { background:var(--accent); color:#fff; padding:28px 20px; }
+  header h1 { margin:0 0 6px; font-size:26px; }
+  header p { margin:0; max-width:900px; opacity:.9; }
+  main { max-width:1000px; margin:0 auto; padding:20px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:22px; margin:0 0 24px; }
+  h2 { margin:0 0 6px; font-size:20px; }
+  h3 { margin:16px 0 4px; font-size:16px; }
+  .sub { color:var(--muted); margin:0 0 14px; }
+  .chart { overflow-x:auto; min-height:120px; }
+  .status { color:var(--muted); font-style:italic; }
+  ul { margin:4px 0 0; padding-left:20px; }
+  li { margin:3px 0; }
+  table { border-collapse:collapse; font-size:14px; margin-top:8px; }
+  td, th { border:1px solid var(--line); padding:4px 8px; text-align:left; }
+  code { background:#eef2fb; padding:1px 4px; border-radius:3px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Visualization 1 – Where did prices grow, and is it off-plan or ready homes?</h1>
+  <p>Sales of units and villas in Dubai, 1 January 2015 – 31 August 2026. Data: Dubai Land Department transactions (10% sample) and Dubai Municipality community boundaries.</p>
+</header>
+
+<main>
+<section>
+  <h2>Price growth map + price trend</h2>
+  <p class="sub"><b>Click a community</b> on the map to see its price trend below. <b>Double-click</b> the map to go back to all of Dubai. Hover for details.</p>
+  <p id="showing" style="font-weight:bold;color:#0c2c84;margin:0 0 6px">Line chart shows: all of Dubai</p>
+  <div class="chart" id="vis"><span class="status">Loading (the data is about 18 MB, give it 10–20 seconds)…</span></div>
+</section>
+
+<section>
+  <h2>1. URL</h2>
+  <p><a href="https://lanaessa909-cloud.github.io/dubai-vega-/viz1.html">https://lanaessa909-cloud.github.io/dubai-vega-/viz1.html</a></p>
+
+  <h2>2. Encoding</h2>
+  <p>The visualization has two linked views.</p>
+  <ul>
+    <li><b>View 1 – map (choropleth).</b> Each Dubai Municipality community is a shape (geoshape, Mercator projection).
+      <b>Colour</b> encodes the <b>change in median sale price per m²</b> between 2019–2020 (before the boom) and Jan 2025 – Aug 2026,
+      on a diverging blue–orange scale centred on 0%: orange = prices went up, blue = prices went down.
+      Communities with fewer than 10 sales in either period are mid-grey (growth not reliable); communities with no unit/villa sales are light grey.
+      The selected community gets a black outline.</li>
+    <li><b>View 2 – line chart.</b> x-axis = quarter (time), y-axis = median sale price per m² (AED),
+      <b>colour</b> = off-plan (orange) vs existing (blue) properties, <b>point size</b> = number of sales in that quarter.
+      Quarters with fewer than 5 sales are left out because their median is not reliable.
+      The label above the chart says which community is shown.</li>
+  </ul>
+
+  <h2>3. Interaction</h2>
+  <ul>
+    <li><b>Hover</b> a community: tooltip with name, number of sales, median price before and now, and the % change.</li>
+    <li><b>Click</b> a community: the line chart is filtered to that community only (a point selection on <code>comm_num</code> drives a filter in View 2).</li>
+    <li><b>Double-click</b>: clears the selection, and the line chart shows all of Dubai again.</li>
+    <li><b>Hover</b> a point in the line chart: quarter, type, median price and number of sales.</li>
+  </ul>
+
+  <h2>4. Value added</h2>
+  <ul>
+    <li>Parts 1 and 2 showed <i>where prices are high</i>. This view shows <i>where prices moved</i>, which is what an <b>investor</b> asks:
+      which communities gained most since before the boom, and which barely moved.</li>
+    <li>The linked trend shows <i>when</i> the growth happened and whether it came from <b>off-plan</b> or <b>ready</b> homes in that community,
+      so a <b>buyer</b> can see if off-plan is priced above or below ready homes in the same place, and whether the trend is still rising or flattening.</li>
+    <li>Greying out communities with too few sales keeps the reader from trusting a % change based on 2 or 3 sales.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>How we handled data quality (applied in the code of every chart)</h2>
+  <table>
+    <tr><th>Problem found</th><th>Size (Part 1 copy of the data)</th><th>What we did</th></tr>
+    <tr><td>Implausible / very old dates (earliest 1967)</td><td>21,664 rows before 2015</td><td>Kept only 1 Jan 2015 – 31 Aug 2026, as in Parts 1–2</td></tr>
+    <tr><td>Incomplete last month (September 2026)</td><td>526 rows</td><td>Dropped (outside the window)</td></tr>
+    <tr><td>Price per m² of zero or missing</td><td>1 sale (not a unit or villa)</td><td>Dropped (already outside the unit/villa price charts)</td></tr>
+    <tr><td>Extreme prices per m² (from 8 to 163,691 AED)</td><td>~1% at each end</td><td>For unit/villa sales: dropped rows below the 1st percentile (4,099 AED/m²) and above the 99th percentile (52,185 AED/m²)</td></tr>
+    <tr><td>Land and whole buildings</td><td>7,785 rows</td><td>Excluded from price charts: their price per m² is not comparable with flats and villas</td></tr>
+    <tr><td>Missing values (rooms, nearest metro / mall, master project)</td><td>rooms 12,766 · metro 24,990 · mall 25,446 · project 8,284</td><td>Kept the rows; only charts that use that column drop the missing ones, and they say so</td></tr>
+    <tr><td>Small groups</td><td>–</td><td>Medians shown only when based on enough sales (10 per period on the map, 5 per quarter on the line chart)</td></tr>
+  </table>
+  <p class="sub" style="margin-top:8px">Dates are read in UTC so results do not depend on the viewer's time zone. All dates and prices are read with explicit types in the Vega-Lite <code>parse</code> option.</p>
+</section>
+</main>
+
+<script>
+const CSV = "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/transactions.csv";
+const GEO = "https://raw.githubusercontent.com/sharios/CS333/main/2026-27/Part%202/dubai.geojson";
+
+// Shared cleaning steps (same rules in every chart of the project)
+const CLEAN_SALES = [
+  {"filter": "isValid(datum.instance_date) && time(datum.instance_date) >= time(utc(2015,0,1)) && time(datum.instance_date) < time(utc(2026,8,1))"},
+  {"filter": "datum.trans_group_en === 'Sales' && (datum.property_type_en === 'Unit' || datum.property_type_en === 'Villa')"},
+  {"filter": "isValid(datum.meter_sale_price) && datum.meter_sale_price >= 4099 && datum.meter_sale_price <= 52185"},
+  {"filter": "isValid(datum.comm_num) && datum.comm_num !== ''"}
+];
+
+const CSV_DATA = {"url": CSV, "format": {"type": "csv", "parse": {
+  "instance_date": "utc:'%Y-%m-%d'", "meter_sale_price": "number", "procedure_area": "number",
+  "actual_worth": "number", "comm_num": "string"}}};
+
+const spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "vconcat": [
+    {
+      "title": {"text": "Change in median price per m², 2019–2020 → Jan 2025–Aug 2026", "subtitle": "Click a community to see its trend below · double-click to reset", "anchor": "start"},
+      "width": 640, "height": 520,
+      "projection": {"type": "mercator", "center": [55.25, 25.08], "scale": 40000, "translate": [320, 260]},
+      "layer": [
+        {
+          "data": {"url": GEO, "format": {"type": "json", "property": "features"}},
+          "mark": {"type": "geoshape", "fill": "#ececec", "stroke": "#ffffff", "strokeWidth": 0.6, "clip": true},
+          "encoding": {"tooltip": [
+            {"field": "properties.CNAME_E", "type": "nominal", "title": "Community"},
+            {"value": "No unit/villa sales", "title": "Sales"}
+          ]}
+        },
+        {
+          "data": CSV_DATA,
+          "transform": CLEAN_SALES.concat([
+            {"calculate": "time(datum.instance_date) >= time(utc(2019,0,1)) && time(datum.instance_date) < time(utc(2021,0,1)) ? datum.meter_sale_price : null", "as": "p_before"},
+            {"calculate": "time(datum.instance_date) >= time(utc(2025,0,1)) ? datum.meter_sale_price : null", "as": "p_now"},
+            {"aggregate": [
+              {"op": "count", "as": "sales"},
+              {"op": "median", "field": "p_before", "as": "med_before"},
+              {"op": "median", "field": "p_now", "as": "med_now"},
+              {"op": "valid", "field": "p_before", "as": "n_before"},
+              {"op": "valid", "field": "p_now", "as": "n_now"}
+            ], "groupby": ["comm_num"]},
+            {"calculate": "datum.n_before >= 10 && datum.n_now >= 10 ? datum.med_now / datum.med_before - 1 : null", "as": "growth"},
+            {"lookup": "comm_num", "from": {"data": {"url": GEO, "format": {"type": "json", "property": "features"}}, "key": "properties.COMM_NUM"}, "as": "geo"},
+            {"filter": "isValid(datum.geo)"},
+            {"calculate": "datum.geo.properties.CNAME_E", "as": "community"}
+          ]),
+          "params": [{"name": "pick", "select": {"type": "point", "fields": ["comm_num"], "on": "click", "clear": "dblclick"}}],
+          "mark": {"type": "geoshape", "clip": true, "cursor": "pointer"},
+          "encoding": {
+            "shape": {"field": "geo", "type": "geojson"},
+            "color": {
+              "condition": {"test": "isValid(datum.growth)", "field": "growth", "type": "quantitative",
+                "title": "Price change",
+                "scale": {"scheme": "blueorange", "domain": [-0.4, 1.2], "domainMid": 0, "clamp": true},
+                "legend": {"format": "+.0%", "orient": "top-left", "fillColor": "rgba(255,255,255,0.9)", "padding": 6}},
+              "value": "#b5b5b5"
+            },
+            "stroke": {"condition": {"param": "pick", "empty": false, "value": "#000000"}, "value": "#ffffff"},
+            "strokeWidth": {"condition": {"param": "pick", "empty": false, "value": 2.5}, "value": 0.6},
+            "tooltip": [
+              {"field": "community", "type": "nominal", "title": "Community"},
+              {"field": "sales", "type": "quantitative", "title": "Sales 2015–2026", "format": ","},
+              {"field": "med_before", "type": "quantitative", "title": "Median AED/m² 2019–20", "format": ",.0f"},
+              {"field": "med_now", "type": "quantitative", "title": "Median AED/m² 2025–26", "format": ",.0f"},
+              {"field": "growth", "type": "quantitative", "title": "Change", "format": "+.0%"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "width": 640, "height": 260,
+      "title": {"text": "Quarterly median price per m²: off-plan vs existing", "anchor": "start"},
+      "data": CSV_DATA,
+      "transform": CLEAN_SALES.concat([{"filter": {"param": "pick"}}]),
+      "layer": [
+        {
+          "transform": [
+            {"timeUnit": "utcyearquarter", "field": "instance_date", "as": "quarter"},
+            {"aggregate": [{"op": "count", "as": "sales"}, {"op": "median", "field": "meter_sale_price", "as": "median_price"}],
+             "groupby": ["quarter", "reg_type_en"]},
+            {"filter": "datum.sales >= 5"}
+          ],
+          "encoding": {
+            "x": {"field": "quarter", "type": "temporal", "title": "Quarter", "scale": {"type": "utc"},
+                  "axis": {"format": "%Y", "formatType": "utc", "tickCount": {"interval": "year", "step": 1}}},
+            "y": {"field": "median_price", "type": "quantitative", "title": "Median price (AED/m²)", "axis": {"format": ",.0f"}},
+            "color": {"field": "reg_type_en", "type": "nominal", "title": "Property status",
+                      "scale": {"domain": ["Off-Plan Properties", "Existing Properties"], "range": ["#e6550d", "#3182bd"]}}
+          },
+          "layer": [
+            {"mark": {"type": "line", "strokeWidth": 2}},
+            {"mark": {"type": "point", "filled": true, "opacity": 0.8},
+             "encoding": {
+               "size": {"field": "sales", "type": "quantitative", "title": "Sales in quarter", "scale": {"range": [10, 160]}},
+               "tooltip": [
+                 {"field": "quarter", "type": "temporal", "timeUnit": "utcyearquarter", "title": "Quarter"},
+                 {"field": "reg_type_en", "type": "nominal", "title": "Status"},
+                 {"field": "median_price", "type": "quantitative", "title": "Median AED/m²", "format": ",.0f"},
+                 {"field": "sales", "type": "quantitative", "title": "Sales", "format": ","}
+               ]}}
+          ]
+        }
+      ]
+    }
+  ],
+  "resolve": {"scale": {"color": "independent", "size": "independent"}, "legend": {"color": "independent"}},
+  "config": {"view": {"stroke": null}}
+};
+
+// Community names for the "Line chart shows" label
+let NAMES = {};
+vega.loader().load(GEO).then(t => {
+  JSON.parse(t).features.forEach(f => { NAMES[String(f.properties.COMM_NUM)] = f.properties.CNAME_E; });
+}).catch(() => {});
+
+function findComm(v) {
+  // the selection value is an object; find the comm_num value(s) wherever they are
+  const out = [];
+  (function walk(x) {
+    if (!x || typeof x !== "object") return;
+    if (Array.isArray(x)) { x.forEach(walk); return; }
+    for (const k in x) {
+      if (k === "comm_num") { [].concat(x[k]).forEach(c => out.push(String(c))); }
+      else walk(x[k]);
+    }
+  })(v);
+  return out;
+}
+
+vegaEmbed("#vis", spec, { actions: { export: true, source: true, compiled: true, editor: true }, renderer: "svg" })
+  .then(res => {
+    const label = document.getElementById("showing");
+    res.view.addSignalListener("pick", (name, value) => {
+      const ids = findComm(value);
+      label.textContent = ids.length ? "Line chart shows: " + ids.map(i => NAMES[i] || ("community " + i)).join(", ")
+                                     : "Line chart shows: all of Dubai";
+    });
+  })
+  .catch(e => {
+    document.getElementById("vis").innerHTML = '<span class="status">Chart could not be loaded: ' + (e.message || e) + '</span>';
+    console.error(e);
+  });
+</script>
+</body>
+</html>
